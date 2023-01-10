@@ -58,6 +58,7 @@ function browserRedirect() {
 const isMobile = browserRedirect()
 
 export default {
+  name: 'nr-process',
   props: {
     percentage: {
       type: Number,

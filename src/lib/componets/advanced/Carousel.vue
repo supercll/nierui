@@ -35,6 +35,7 @@ import {
   watch
 } from 'vue'
 export default {
+  name: 'nr-carousel',
   props: {
     speed: {
       type: Number,

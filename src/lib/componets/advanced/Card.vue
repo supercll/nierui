@@ -21,6 +21,7 @@
 
 <script>
 export default {
+  name: 'nr-card',
   props: {
     title: {
       type: String,

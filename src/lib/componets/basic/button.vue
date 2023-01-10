@@ -12,7 +12,7 @@
 <script lang="ts">
 import { computed } from 'vue'
 export default {
-  name: 'n-button',
+  name: 'nr-button',
   props: {
     theme: {
       type: String,

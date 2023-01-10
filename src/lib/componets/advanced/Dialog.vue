@@ -24,6 +24,7 @@
 <script lang="ts">
 import NButton from '../basic/Button.vue'
 export default {
+  name: 'nr-dialog',
   props: {
     visible: {
       type: Boolean,

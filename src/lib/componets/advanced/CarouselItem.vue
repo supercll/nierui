@@ -5,7 +5,10 @@
 </template>
 
 <script>
-export default {}
+export default {
+  name: 'nr-carousel-item',
+
+}
 </script>
 
 <style lang="scss">

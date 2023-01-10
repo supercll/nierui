@@ -32,7 +32,7 @@
 
 <script lang="ts">
 export default {
-  name: 'n-switch',
+  name: 'nr-switch',
   props: {
     value: {
       type: Boolean,
