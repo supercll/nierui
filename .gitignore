@@ -3,5 +3,6 @@ node_modules
 dist
 /dist
 *.local
-/.history
-/.idea 
+.history
+.idea 
+.vscode
