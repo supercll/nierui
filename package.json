@@ -16,11 +16,7 @@
     "lint": "eslint src/**/*.{js,jsx,vue,ts,tsx} --fix"
   },
   "dependencies": {
-    "github-markdown-css": "^4.0.0",
-    "marked": "^1.1.1",
-    "prismjs": "^1.29.0",
-    "vue": "^3.2.45",
-    "vue-router": "4.1.6"
+    "vue": "^3.2.45"
   },
   "devDependencies": {
     "@rollup/plugin-terser": "^0.3.0",
@@ -41,10 +37,13 @@
     "typescript": "^4.9.4",
     "vite": "^4.0.4",
     "vite-plugin-eslint": "^1.8.1",
-    "vite-plugin-vue-markdown": "^0.22.2"
+    "vite-plugin-vue-markdown": "^0.22.2",
+    "github-markdown-css": "^4.0.0",
+    "marked": "^1.1.1",
+    "prismjs": "^1.29.0",
+    "vue-router": "4.1.6"
   },
   "peerDependencies": {
-    "github-markdown-css": "4.0.0",
     "vue": "3.2.45"
   }
 }
