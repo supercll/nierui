@@ -1,6 +1,6 @@
 {
   "name": "nier-ui",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "files": [
     "dist/lib/*"
   ],
@@ -13,7 +13,11 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "lint": "eslint src/**/*.{js,jsx,vue,ts,tsx} --fix"
+    "lint": "eslint src/**/*.{js,jsx,vue,ts,tsx} --fix",
+    "release": "release-it",
+    "clean": "rm -rf ./dist",
+    "prepublish": "rollup -c",
+    "publish": "pnpm run --filter ./dist release"
   },
   "dependencies": {
     "vue": "^3.2.45"
@@ -29,6 +33,10 @@
     "babel-eslint": "^10.1.0",
     "eslint": "^8.31.0",
     "eslint-plugin-vue": "^9.8.0",
+    "github-markdown-css": "^4.0.0",
+    "marked": "^1.1.1",
+    "prismjs": "^1.29.0",
+    "release-it": "^15.6.0",
     "rollup-plugin-esbuild": "^4.10.3",
     "rollup-plugin-scss": "^3.0.0",
     "rollup-plugin-svg": "^2.0.0",
@@ -38,12 +46,18 @@
     "vite": "^4.0.4",
     "vite-plugin-eslint": "^1.8.1",
     "vite-plugin-vue-markdown": "^0.22.2",
-    "github-markdown-css": "^4.0.0",
-    "marked": "^1.1.1",
-    "prismjs": "^1.29.0",
     "vue-router": "4.1.6"
   },
   "peerDependencies": {
     "vue": "3.2.45"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/supercll/nierui"
+  },
+  "license": "MIT",
+  "keywords": [
+    "nier-ui",
+    "vue3"
+  ]
 }
