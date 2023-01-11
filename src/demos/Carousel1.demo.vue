@@ -26,7 +26,7 @@ export default {
     return {
       speed: 0.45,
       autoDelay: 2500,
-      timingFunction: 'ease-inr-out',
+      timingFunction: 'ease-in-out',
     }
   },
 }

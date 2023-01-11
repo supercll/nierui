@@ -1,10 +1,9 @@
 <template>
-  <div class="nier-carousel" :ref="getCarouselDom">
+  <div class="nier-carousel" ref="carouselDom">
     <div
       class="nier-carousel-container"
       :class="{ closeTransition: listData.closeTran }"
-      :style="tranSpeed"
-      :ref="getcontainerDom"
+      ref="containerRef"
     >
       <slot></slot>
     </div>
@@ -19,7 +18,7 @@
         v-for="(item, index) in listData.length"
         :key="item"
         :data-id="index"
-        :class="{ active: index == listData.showIndex }"
+        :class="{ active: index == listData.currentIndex }"
         @click="onToggle"
       ></li>
     </ul>
@@ -27,11 +26,15 @@
 </template>
 
 <script lang="ts">
+type RefElement = Element & VueElement
 import {
   computed,
+  nextTick,
   onBeforeUnmount,
   onMounted,
   reactive,
+  ref,
+  VueElement,
   watch
 } from 'vue'
 export default {
@@ -51,14 +54,17 @@ export default {
     },
   },
   setup(props) {
-    let carouselDom = null as HTMLElement
-    let containerRef = null as HTMLElement
-    let sourceList = null as NodeList
+    const carouselDom = ref<RefElement>()
+
+    const containerRef = ref<RefElement>()
+
+    let carouselItemList: HTMLElement[] = null
+
+    const translateXDList = ['-100%']
+
     let io = null as IntersectionObserver
     const { speed, autoDelay, timingFunction } = props
     let autoTimer = null
-    const getcontainerDom = (el) => (containerRef = el)
-    const getCarouselDom = (el) => (carouselDom = el)
 
     const listData = reactive({
       list: [],
@@ -68,80 +74,63 @@ export default {
       closeTran: false,
     })
     const tranSpeed = computed(() => {
-      let transition = speed + 's'
+      const transition = `transition: transform ${speed}s ${timingFunction};`
 
-      if (speed > 1) {
-        transition = speed + 'ms'
-      }
-      transition = `transform ${timingFunction} ${transition}`
-      return {
-        transition,
-      }
+      return transition
     })
 
-    onMounted(() => {
-      sourceList = document.querySelectorAll('.nier-carouselItem')
-      const list = Array.from(sourceList)
+    const styles = computed(() => {
+      return `${tranSpeed.value}transform: translateX(${-listData.currentIndex * 100}%)`
+    })
 
-      list.forEach((item: HTMLElement, index) => {
+    console.log(styles.value)
+
+    const initCarousel = () => {
+      carouselItemList = Array.from(document.querySelectorAll('.nier-carouselItem'))
+
+      carouselItemList.forEach((item: HTMLElement, index) => {
         item.style.transform = `translateX(${index * 100}%)`
       })
-      listData.list = list
-      listData.length = list.length
+      listData.list = carouselItemList
+      listData.length = carouselItemList.length
       // 克隆首位节点
-      const copyDomFirst = listData.list[listData.length - 1].cloneNode(
-        true
-      ) as HTMLElement
-      const copyDomLast = listData.list[0].cloneNode(true) as HTMLElement
-      const firstChild = containerRef.firstElementChild
+      const copyDomFirst: HTMLElement = listData.list[listData.length - 1].cloneNode(true)
+      const copyDomLast = listData.list[listData.list.length - 1]
+      const firstChild = containerRef.value.firstElementChild
 
-      containerRef.insertBefore(copyDomFirst, firstChild)
-      containerRef.appendChild(copyDomLast)
+      containerRef.value.insertBefore(copyDomFirst, firstChild)
+      containerRef.value.removeChild(copyDomLast)
       copyDomFirst.style.transform = 'translateX(-100%)'
-      copyDomLast.style.transform = `translateX(${list.length * 100}%)`
-      // 监听
-      containerRef.ontransitionend = () => {
-        if (listData.currentIndex == listData.length) {
-          listData.closeTran = true
-          containerRef.style.transform = 'translateX(0%)'
-          listData.currentIndex = 0
-          timeout()
-        }
-        if (listData.currentIndex == -1) {
-          listData.closeTran = true
-          containerRef.style.transform = `translateX(${
-            -(listData.length - 1) * 100
-          }%)`
-          listData.currentIndex = listData.length - 1
-          timeout()
-        }
-      }
+      setActive(0)
+    }
 
+    onMounted(() => {
+      initCarousel()
       // 鼠标悬浮事件
-      carouselDom.onmouseenter = () => {
+      carouselDom.value.onmouseenter = () => {
         clearInterval(autoTimer)
       }
-      carouselDom.onmouseleave = () => {
-        autoPlayer()
+      carouselDom.value.onmouseleave = () => {
+        // autoPlayer()
       }
       // 视口显示监听
       io = new IntersectionObserver(
         (entries) => {
           if (!entries[0].isIntersecting) return
-          autoPlayer()
+          // autoPlayer()
         },
         { root: null, threshold: [0.5] }
       )
-      io.observe(carouselDom)
+      io.observe(carouselDom.value)
     })
 
     onBeforeUnmount(() => {
-      containerRef.ontransitionend = null
-      carouselDom.onmouseenter = null
-      carouselDom.onmouseleave = null
+      containerRef.value.ontransitionend = null
+      carouselDom.value.onmouseenter = null
+      carouselDom.value.onmouseleave = null
       clearInterval(autoTimer)
       autoTimer = null
-      io.unobserve(carouselDom) // 停止观察
+      io.unobserve(carouselDom.value) // 停止观察
       io.disconnect() // 关闭观察器
     })
 
@@ -151,27 +140,37 @@ export default {
       }, autoDelay)
     }
 
-    const debounce = (func, wait = speed * 1000, immediate = true) => {
-      let timer = null
-
-      return function anonymous(...params) {
-        const now = immediate && !timer
-
-        clearTimeout(timer)
-        timer = setTimeout(() => {
-          timer = null
-          !immediate ? func.call(this, ...params) : null
-        }, wait)
-        now ? func.call(this, ...params) : null
-      }
+    const setActive = (activeIndex) => {
+      carouselItemList[activeIndex].classList.add('is_animating')
+      nextTick(() => {
+        listData.currentIndex = activeIndex
+        /*
+         * carouselItemList[activeIndex].ontransitionend = () => {
+         *   carouselItemList.forEach((carouselItem, index) => {
+         *     if (activeIndex !== index) {
+         *       carouselItem.classList.remove('is_animating')
+         *     }
+         *   })
+         * }
+         */
+      })
+      console.log()
     }
 
-    const onNext = debounce(() => {
-      listData.currentIndex++
+    watch(() => listData.currentIndex, (currentIndex) => {
+      carouselItemList.forEach((el, index) => {
+        const n = index - currentIndex
+
+        el.style.transform = `translateX(${n * 100}%)`
+      })
     })
-    const onPrev = debounce(() => {
-      listData.currentIndex--
-    })
+    const onNext = () => {
+      setActive(listData.currentIndex + 1)
+      console.log(listData.currentIndex)
+    }
+    const onPrev = () => {
+      setActive(listData.currentIndex - 1)
+    }
 
     const onToggle = (e) => {
       const id = e.target.dataset.id
@@ -188,32 +187,36 @@ export default {
       })
     }
 
-    watch(
-      () => listData.currentIndex,
-      () => {
-        const currentIndex = listData.currentIndex
-        const listLength = listData.length
+    /*
+     * watch(
+     *   () => listData.currentIndex,
+     *   () => {
+     *     const currentIndex = listData.currentIndex
+     *     const listLength = listData.length
+     */
 
-        containerRef.style.transform = `translateX(${-currentIndex * 100}%)`
-        if (currentIndex < 0) {
-          listData.showIndex = listLength - 1
-        } else if (currentIndex >= listLength) {
-          listData.showIndex = 0
-        } else {
-          listData.showIndex = currentIndex
-        }
-      }
-    )
+    /*
+     *     containerRef.value.style.transform = `translateX(${-currentIndex * 100}%)`
+     *     if (currentIndex < 0) {
+     *       listData.showIndex = listLength - 1
+     *     } else if (currentIndex >= listLength) {
+     *       listData.showIndex = 0
+     *     } else {
+     *       listData.showIndex = currentIndex
+     *     }
+     *   }
+     * )
+     */
 
     return {
       listData,
       onNext,
       onPrev,
-      getcontainerDom,
-      getCarouselDom,
       onToggle,
       tranSpeed,
-      debounce,
+      containerRef,
+      carouselDom,
+      styles,
     }
   },
 }
@@ -228,13 +231,22 @@ export default {
   background: rgba(115, 201, 229, 0.3);
   box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
 
-  &:hover &-button {
-    visinierty: visible;
+  .is_animating {
+    transition: transform .4s ease-in-out;
   }
-  overflow: hidden;
+
+  &-container {
+    position: relative;
+    height: 100%;
+  }
+
+  &:hover &-button {
+    visibility: visible;
+  }
+  // overflow: hidden;
 
   &-button {
-    visinierty: hidden;
+    visibility: hidden;
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
@@ -279,11 +291,6 @@ export default {
     &-active {
       background: #73c9e5;
     }
-  }
-
-  &-container {
-    position: relative;
-    height: 100%;
   }
 
   .active {
