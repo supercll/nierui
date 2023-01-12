@@ -1,5 +1,5 @@
 <template>
-  <div class="nier-carouselItem">
+  <div class="nier-carousel_item">
     <slot></slot>
   </div>
 </template>
@@ -7,16 +7,15 @@
 <script>
 export default {
   name: 'nr-carousel-item',
-
 }
 </script>
 
 <style lang="scss">
-.nier-carouselItem {
+.nier-carousel_item {
   position: absolute;
   width: 100%;
   height: 100%;
-  background: rgba(115, 201, 229);
+  background: #dbd3b8;
   img {
     width: 100%;
     height: 100%;

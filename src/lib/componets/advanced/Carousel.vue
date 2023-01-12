@@ -52,6 +52,15 @@ const props = defineProps({
     default: 'linear',
   },
 })
+const getNextIndex = (index) => {
+  if (index >= carouselItemList.length) {
+    return 0
+  } else if (index <= -1) {
+    return carouselItemList.length - 1
+  } else {
+    return index
+  }
+}
 
 defineComponent({
   name: 'nr-carousel',
@@ -79,28 +88,21 @@ const tranSpeed = computed(() => {
   return transition
 })
 
-const styles = computed(() => {
-  return `${tranSpeed.value}transform: translateX(${-listData.currentIndex * 100}%)`
-})
-
-console.log(styles.value)
-
 const initCarousel = () => {
-  carouselItemList = Array.from(document.querySelectorAll('.nier-carouselItem'))
+  carouselItemList = Array.from(document.querySelectorAll('.nier-carousel_item'))
 
-  carouselItemList.forEach((item: HTMLElement, index) => {
-    item.style.transform = `translateX(${index * 100}%)`
-  })
   listData.list = carouselItemList
   listData.length = carouselItemList.length
-  // 克隆首位节点
-  const copyDomFirst: HTMLElement = listData.list[listData.length - 1].cloneNode(true)
-  const copyDomLast = listData.list[listData.list.length - 1]
-  const firstChild = containerRef.value.firstElementChild
 
-  containerRef.value.insertBefore(copyDomFirst, firstChild)
-  containerRef.value.removeChild(copyDomLast)
-  copyDomFirst.style.transform = 'translateX(-100%)'
+  carouselItemList.forEach((item: HTMLElement, index) => {
+    console.log(index, carouselItemList.length - 1, item)
+
+    if (index === carouselItemList.length - 1) {
+      item.style.transform = 'translateX(-100%)'
+    } else {
+      item.style.transform = `translateX(${index * 100}%)`
+    }
+  })
   setActive(0)
 }
 
@@ -162,14 +164,18 @@ watch(() => listData.currentIndex, (currentIndex) => {
     const n = index - currentIndex
 
     el.style.transform = `translateX(${n * 100}%)`
+    el.ontransitionend = () => {
+      console.log('end')
+    }
   })
 })
+
 const onNext = () => {
-  setActive(listData.currentIndex + 1)
+  setActive(getNextIndex(listData.currentIndex + 1))
   console.log(listData.currentIndex)
 }
 const onPrev = () => {
-  setActive(listData.currentIndex - 1)
+  setActive(getNextIndex(listData.currentIndex - 1))
 }
 
 const onToggle = (e) => {
@@ -216,7 +222,7 @@ const timeout = () => {
   width: 460px;
   height: 240px;
   margin: 0 5px;
-  background: rgba(115, 201, 229, 0.3);
+  background: #d0cca5;
   box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
 
   .is_animating {
@@ -269,20 +275,20 @@ const timeout = () => {
       margin: 0 8px;
       cursor: pointer;
       border-radius: 50%;
-      background: rgba(251, 114, 153, 0.4);
+      background: #000000;
 
       &:hover {
-        background: #73c9e5;
+        background: #686157;
       }
     }
 
     &-active {
-      background: #73c9e5;
+      background: #686157;
     }
   }
 
   .active {
-    background: #73c9e5;
+    background: #686157;
   }
   .closeTransition {
     transition: none !important;
