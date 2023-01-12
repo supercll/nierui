@@ -8,9 +8,11 @@
       <nr-button @click="hideCode" v-if="codeVisible">隐藏代码</nr-button>
       <nr-button @click="showCode" v-else>查看代码</nr-button>
     </div>
-    <div class="demo-code" v-if="codeVisible">
-      <pre class="language-html" v-html="html" />
-    </div>
+    <transition :duration="550" :mode="'in-out'" name="nested">
+      <div class="demo-code" v-if="codeVisible">
+        <pre class="language-html" v-html="html" />
+      </div>
+    </transition>
 
   </div>
 </template>
@@ -59,33 +61,66 @@ export default {
 $border-color: #d9d9d9;
 
 .demo {
-    border: 1px solid $border-color;
-    margin: 16px 0 32px;
+  border: 1px solid $border-color;
+  margin: 16px 0 32px;
 
-    >h2 {
-        font-size: 20px;
-        padding: 8px 16px;
-        border-bottom: 1px solid $border-color;
+  >h2 {
+    font-size: 20px;
+    padding: 8px 16px;
+    border-bottom: 1px solid $border-color;
+  }
+
+  &-component {
+    padding: 16px;
+  }
+
+  &-actions {
+    padding: 8px 16px;
+    border-top: 1px dashed $border-color;
+  }
+
+  &-code {
+    padding: 8px 16px;
+    border-top: 1px dashed $border-color;
+
+    >pre {
+      line-height: 1.1;
+      font-family: Consolas, 'Courier New', Courier, monospace;
+      margin: 0;
     }
+  }
 
-    &-component {
-        padding: 16px;
-    }
+  .nested-enter-active,
+  .nested-leave-active {
+    transition: all 0.3s linear;
+  }
 
-    &-actions {
-        padding: 8px 16px;
-        border-top: 1px dashed $border-color;
-    }
+  /* delay leave of parent element */
+  .nested-leave-active {
+    transition-delay: 0.25s;
+  }
 
-    &-code {
-        padding: 8px 16px;
-        border-top: 1px dashed $border-color;
+  .nested-enter-from,
+  .nested-leave-to {
+    transform: translateY(30px);
+    opacity: 0;
+  }
 
-        >pre {
-            line-height: 1.1;
-            font-family: Consolas, 'Courier New', Courier, monospace;
-            margin: 0;
-        }
-    }
+  /* we can also transition nested elements using nested selectors */
+  .nested-enter-active .language-html,
+  .nested-leave-active .language-html {
+    transition: all 0.3s linear;
+  }
+
+  /* delay enter of nested element */
+  .nested-enter-active .language-html {
+    transition-delay: 0.25s;
+  }
+
+  .nested-enter-from .language-html,
+  .nested-leave-to .language-html {
+    transform: translateX(30px);
+    opacity: 0.001;
+  }
 }
 </style>
