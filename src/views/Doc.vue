@@ -41,6 +41,9 @@
           <li>
             <router-link to="/doc/tabs">Tabs</router-link>
           </li>
+          <li>
+            <router-link to="/doc/mplayer">MPlayer</router-link>
+          </li>
 
         </ul>
       </aside>

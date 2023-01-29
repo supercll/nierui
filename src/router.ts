@@ -8,6 +8,7 @@ import ProgressDemo from './components/ProgressDemo.vue'
 import CardDemo from './components/CardDemo.vue'
 import CarouselDemo from './components/CarouselDemo.vue'
 import DocDemo from './components/DocDemo.vue'
+import MPlayerDemo from './components/MPlayerDemo.vue'
 
 import { createWebHashHistory, createRouter } from 'vue-router'
 
@@ -47,6 +48,7 @@ export const router = createRouter({
         { path: 'progress', component: ProgressDemo },
         { path: 'card', component: CardDemo },
         { path: 'carousel', component: CarouselDemo },
+        { path: 'mplayer', component: MPlayerDemo },
       ],
     },
   ],
