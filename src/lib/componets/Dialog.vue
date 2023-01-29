@@ -22,7 +22,7 @@
 </template>
 
 <script lang="ts">
-import NButton from '../basic/Button.vue'
+import NButton from './Button.vue'
 export default {
   name: 'nr-dialog',
   props: {
