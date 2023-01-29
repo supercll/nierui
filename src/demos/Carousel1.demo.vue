@@ -3,7 +3,7 @@
 </demo>
 <template>
   <div>
-    <nr-carousel :speed="speed" :autoDelay="autoDelay" :timingFunction="timingFunction">
+    <nr-carousel transition="transform .4s ease-in-out" :delay="autoDelay" :timingFunction="timingFunction">
       <nr-carousel-item class="container">1</nr-carousel-item>
       <nr-carousel-item class="container">2</nr-carousel-item>
       <nr-carousel-item class="container">3</nr-carousel-item>

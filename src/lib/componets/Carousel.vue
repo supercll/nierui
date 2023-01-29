@@ -2,7 +2,7 @@
   <div class="nier-carousel" ref="carouselDom">
     <div
       class="nier-carousel-container"
-      :class="{ closeTransition: listData.closeTran }"
+      :class="{ autoplay: listData.autoplay }"
       ref="containerRef"
     >
       <slot></slot>
@@ -39,11 +39,11 @@ import {
 } from 'vue'
 type RefElement = Element & VueElement
 const props = defineProps({
-  speed: {
-    type: Number,
-    default: 0.25,
+  transition: {
+    type: String,
+    default: 'transform .4s ease-in-out',
   },
-  autoDelay: {
+  delay: {
     type: Number,
     default: 2000,
   },
@@ -71,8 +71,10 @@ const containerRef = ref<RefElement>()
 
 let carouselItemList: HTMLElement[] = null
 
+const virtualList: number[] = []
+
 let io = null as IntersectionObserver
-const { speed, autoDelay, timingFunction } = props
+const { delay } = props
 let autoTimer = null
 
 const listData = reactive({
@@ -80,12 +82,7 @@ const listData = reactive({
   showIndex: 0,
   currentIndex: 0,
   length: 0,
-  closeTran: false,
-})
-const tranSpeed = computed(() => {
-  const transition = `transition: transform ${speed}s ${timingFunction};`
-
-  return transition
+  autoplay: false,
 })
 
 const initCarousel = () => {
@@ -95,14 +92,15 @@ const initCarousel = () => {
   listData.length = carouselItemList.length
 
   carouselItemList.forEach((item: HTMLElement, index) => {
-    console.log(index, carouselItemList.length - 1, item)
-
+    virtualList.push(index)
     if (index === carouselItemList.length - 1) {
       item.style.transform = 'translateX(-100%)'
     } else {
       item.style.transform = `translateX(${index * 100}%)`
     }
   })
+  virtualList.unshift(virtualList.pop())
+
   setActive(0)
 }
 
@@ -139,49 +137,59 @@ onBeforeUnmount(() => {
 const autoPlayer = () => {
   autoTimer = setInterval(() => {
     onNext()
-  }, autoDelay)
+  }, delay)
 }
 
 const setActive = (activeIndex) => {
-  carouselItemList[activeIndex].classList.add('is_animating')
-  nextTick(() => {
-    listData.currentIndex = activeIndex
-    /*
-     * carouselItemList[activeIndex].ontransitionend = () => {
-     *   carouselItemList.forEach((carouselItem, index) => {
-     *     if (activeIndex !== index) {
-     *       carouselItem.classList.remove('is_animating')
-     *     }
-     *   })
-     * }
-     */
+  const virtualList = setVirtualPosition(activeIndex)
+
+  carouselItemList.forEach(el => {
+    el.classList.remove('is_animating')
   })
-  console.log()
+  carouselItemList[0].classList.add('z_index-3')
+  carouselItemList[1].classList.add('z_index-3')
+
+  for (let i = 0; i < 3; i++) {
+    carouselItemList[virtualList[i]].classList.add('is_animating')
+  }
+
+  listData.currentIndex = activeIndex
+  carouselItemList.forEach((el, domPosition) => {
+    el.style.transform = `translateX(${(virtualList.indexOf(domPosition) - 1) * 100}%)`
+  })
 }
 
-watch(() => listData.currentIndex, (currentIndex) => {
-  carouselItemList.forEach((el, index) => {
-    const n = index - currentIndex
+const setVirtualPosition = (currentIndex) => {
+  virtualList.forEach((item, index, vList) => {
+    if (index === 0) {
+      const virtualPosition = currentIndex - 1
 
-    el.style.transform = `translateX(${n * 100}%)`
-    el.ontransitionend = () => {
-      console.log('end')
+      vList[index] = virtualPosition >= 0 ? virtualPosition : virtualPosition + carouselItemList.length
+    } else {
+      const virtualPosition = currentIndex + index - 1
+
+      vList[index] = virtualPosition <= carouselItemList.length - 1 ? virtualPosition : virtualPosition - carouselItemList.length
     }
   })
-})
+  return virtualList
+}
 
 const onNext = () => {
-  setActive(getNextIndex(listData.currentIndex + 1))
-  console.log(listData.currentIndex)
+  const nextIndex = getNextIndex(listData.currentIndex + 1)
+
+  setActive(nextIndex)
 }
 const onPrev = () => {
-  setActive(getNextIndex(listData.currentIndex - 1))
+  const prevIndex = getNextIndex(listData.currentIndex - 1)
+
+  setActive(prevIndex)
 }
 
 const onToggle = (e) => {
   const id = e.target.dataset.id
 
-  listData.currentIndex = id
+  setActive(id)
+
   listData.showIndex = id
 }
 
@@ -189,30 +197,9 @@ const timeout = () => {
   let timer = setTimeout(() => {
     clearTimeout(timer)
     timer = null
-    listData.closeTran = false
+    listData.autoplay = false
   })
 }
-
-/*
- * watch(
- *   () => listData.currentIndex,
- *   () => {
- *     const currentIndex = listData.currentIndex
- *     const listLength = listData.length
- */
-
-/*
- *     containerRef.value.style.transform = `translateX(${-currentIndex * 100}%)`
- *     if (currentIndex < 0) {
- *       listData.showIndex = listLength - 1
- *     } else if (currentIndex >= listLength) {
- *       listData.showIndex = 0
- *     } else {
- *       listData.showIndex = currentIndex
- *     }
- *   }
- * )
- */
 
 </script>
  <style lang="scss">
@@ -225,8 +212,10 @@ const timeout = () => {
   background: #d0cca5;
   box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
 
+  overflow: hidden;
+
   .is_animating {
-    transition: transform .4s ease-in-out;
+    transition: v-bind(transition);
   }
 
   &-container {
@@ -237,7 +226,6 @@ const timeout = () => {
   &:hover &-button {
     visibility: visible;
   }
-  // overflow: hidden;
 
   &-button {
     visibility: hidden;
@@ -248,6 +236,8 @@ const timeout = () => {
     color: rgba(251, 114, 153, 0.4);
     cursor: pointer;
     margin: 0 5px;
+    z-index: 10;
+
     &:hover {
       color: #73c9e5;
     }
@@ -268,7 +258,7 @@ const timeout = () => {
     display: flex;
     flex-wrap: wrap;
     justify-content: flex-end;
-
+    z-index: 10;
     li {
       width: 12px;
       height: 12px;
@@ -290,8 +280,12 @@ const timeout = () => {
   .active {
     background: #686157;
   }
-  .closeTransition {
+  .autoplay {
     transition: none !important;
+  }
+
+  .z_index-3 {
+    z-index: 3;
   }
 }
 </style>
