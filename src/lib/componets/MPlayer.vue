@@ -243,7 +243,6 @@ export default defineComponent({
 <style lang="scss" scoped>
 
 .music-container {
-  position: fixed;
   justify-content: center;
   height: 110px;
   border-radius: 15px;
