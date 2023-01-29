@@ -2,7 +2,7 @@
   <div class="nier-carousel" ref="carouselDom">
     <div
       class="nier-carousel-container"
-      :class="{ autoplay: listData.autoplay }"
+      :class="{ autoplay: carouselData.autoplay }"
       ref="containerRef"
     >
       <slot></slot>
@@ -15,10 +15,10 @@
     </div>
     <ul class="nier-carousel-nav">
       <li
-        v-for="(item, index) in listData.length"
+        v-for="(item, index) in carouselData.length"
         :key="item"
         :data-id="index"
-        :class="{ active: index == listData.currentIndex }"
+        :class="{ active: index == carouselData.currentIndex }"
         @click="onToggle"
       ></li>
     </ul>
@@ -27,15 +27,12 @@
 
 <script lang="ts" setup>
 import {
-  computed,
   defineComponent,
-  nextTick,
   onBeforeUnmount,
   onMounted,
   reactive,
   ref,
-  VueElement,
-  watch
+  VueElement
 } from 'vue'
 type RefElement = Element & VueElement
 const props = defineProps({
@@ -45,7 +42,7 @@ const props = defineProps({
   },
   delay: {
     type: Number,
-    default: 2000,
+    default: 1500,
   },
   timingFunction: {
     type: String,
@@ -77,9 +74,8 @@ let io = null as IntersectionObserver
 const { delay } = props
 let autoTimer = null
 
-const listData = reactive({
+const carouselData = reactive({
   list: [],
-  showIndex: 0,
   currentIndex: 0,
   length: 0,
   autoplay: false,
@@ -88,8 +84,8 @@ const listData = reactive({
 const initCarousel = () => {
   carouselItemList = Array.from(document.querySelectorAll('.nier-carousel_item'))
 
-  listData.list = carouselItemList
-  listData.length = carouselItemList.length
+  carouselData.list = carouselItemList
+  carouselData.length = carouselItemList.length
 
   carouselItemList.forEach((item: HTMLElement, index) => {
     virtualList.push(index)
@@ -111,13 +107,13 @@ onMounted(() => {
     clearInterval(autoTimer)
   }
   carouselDom.value.onmouseleave = () => {
-    // autoPlayer()
+    autoPlayer()
   }
   // 视口显示监听
   io = new IntersectionObserver(
     (entries) => {
       if (!entries[0].isIntersecting) return
-      // autoPlayer()
+      autoPlayer()
     },
     { root: null, threshold: [0.5] }
   )
@@ -140,9 +136,7 @@ const autoPlayer = () => {
   }, delay)
 }
 
-const setActive = (activeIndex) => {
-  const virtualList = setVirtualPosition(activeIndex)
-
+const setAnimation = () => {
   carouselItemList.forEach(el => {
     el.classList.remove('is_animating')
   })
@@ -152,8 +146,20 @@ const setActive = (activeIndex) => {
   for (let i = 0; i < 3; i++) {
     carouselItemList[virtualList[i]].classList.add('is_animating')
   }
+}
 
-  listData.currentIndex = activeIndex
+const setActive = (activeIndex, isToggle = false) => {
+  const virtualList = setVirtualPosition(activeIndex)
+
+  if (!isToggle) {
+    setAnimation()
+  } else {
+    carouselItemList.forEach(el => {
+      el.classList.add('is_animating')
+    })
+  }
+
+  carouselData.currentIndex = activeIndex
   carouselItemList.forEach((el, domPosition) => {
     el.style.transform = `translateX(${(virtualList.indexOf(domPosition) - 1) * 100}%)`
   })
@@ -175,30 +181,20 @@ const setVirtualPosition = (currentIndex) => {
 }
 
 const onNext = () => {
-  const nextIndex = getNextIndex(listData.currentIndex + 1)
+  const nextIndex = getNextIndex(carouselData.currentIndex + 1)
 
   setActive(nextIndex)
 }
 const onPrev = () => {
-  const prevIndex = getNextIndex(listData.currentIndex - 1)
+  const prevIndex = getNextIndex(carouselData.currentIndex - 1)
 
   setActive(prevIndex)
 }
 
 const onToggle = (e) => {
-  const id = e.target.dataset.id
+  const id = Number(e.target.dataset.id)
 
-  setActive(id)
-
-  listData.showIndex = id
-}
-
-const timeout = () => {
-  let timer = setTimeout(() => {
-    clearTimeout(timer)
-    timer = null
-    listData.autoplay = false
-  })
+  setActive(id, true)
 }
 
 </script>
